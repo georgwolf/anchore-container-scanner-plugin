@@ -62,6 +62,8 @@ public class AnchoreBuilder extends Builder implements SimpleBuildStep {
   private boolean bailOnFail = DescriptorImpl.DEFAULT_BAIL_ON_FAIL;
   private boolean bailOnPluginFail = DescriptorImpl.DEFAULT_BAIL_ON_PLUGIN_FAIL;
   private String policyBundleId = DescriptorImpl.DEFAULT_POLICY_BUNDLE_ID;
+  private double stopActionHealthFactor = DescriptorImpl.DEFAULT_STOP_ACTION_HEALTH_FACTOR;
+  private double warnActionHealthFactor = DescriptorImpl.DEFAULT_WARN_ACTION_HEALTH_FACTOR;
   private List<Annotation> annotations;
   private boolean autoSubscribeTagUpdates = DescriptorImpl.DEFAULT_AUTOSUBSCRIBE_TAG_UPDATES;
   private boolean forceAnalyze = DescriptorImpl.DEFAULT_FORCE_ANALYZE;
@@ -92,6 +94,14 @@ public class AnchoreBuilder extends Builder implements SimpleBuildStep {
 
   public String getPolicyBundleId() {
     return policyBundleId;
+  }
+
+  public double getWarnActionHealthFactor(){
+    return warnActionHealthFactor;
+  }
+  
+  public double getStopActionHealthFactor(){
+    return stopActionHealthFactor;
   }
 
   public List<Annotation> getAnnotations() {
@@ -139,6 +149,16 @@ public class AnchoreBuilder extends Builder implements SimpleBuildStep {
     this.policyBundleId = policyBundleId;
   }
 
+  @DataBoundSetter
+  public void setWarnActionHealthFactor(double warnActionHealthFactor){
+    this.warnActionHealthFactor = warnActionHealthFactor;
+  }
+
+  @DataBoundSetter
+  public void setStopActionHealthFactor(double stopActionHealthFactor){
+    this.stopActionHealthFactor = stopActionHealthFactor;
+  }
+  
   @DataBoundSetter
   public void setAnnotations(List<Annotation> annotations) {
     this.annotations = annotations;
@@ -219,7 +239,8 @@ public class AnchoreBuilder extends Builder implements SimpleBuildStep {
 
       /* Instantiate config and a new build worker */
       config = new BuildConfig(name, engineRetries, bailOnFail,
-          bailOnPluginFail, policyBundleId, annotations, autoSubscribeTagUpdates, forceAnalyze, globalConfig.getDebug(),
+          bailOnPluginFail, policyBundleId, warnActionHealthFactor, stopActionHealthFactor, annotations,
+          autoSubscribeTagUpdates, forceAnalyze, globalConfig.getDebug(),
           // messy build time overrides, ugh!
           !Strings.isNullOrEmpty(engineurl) ? engineurl : globalConfig.getEngineurl(),
           !Strings.isNullOrEmpty(engineuser) ? engineuser : globalConfig.getEngineuser(),
@@ -311,6 +332,8 @@ public class AnchoreBuilder extends Builder implements SimpleBuildStep {
     public static final boolean DEFAULT_BAIL_ON_PLUGIN_FAIL = true;
     public static final String DEFAULT_PLUGIN_MODE = "anchoreengine";
     public static final String DEFAULT_POLICY_BUNDLE_ID = "";
+    public static final double DEFAULT_STOP_ACTION_HEALTH_FACTOR = 25;
+    public static final double DEFAULT_WARN_ACTION_HEALTH_FACTOR = 5;
     public static final String EMPTY_STRING = "";
     public static final boolean DEFAULT_AUTOSUBSCRIBE_TAG_UPDATES = true;
     public static final boolean DEFAULT_FORCE_ANALYZE = false;

@@ -15,6 +15,8 @@ public class BuildConfig {
   private boolean bailOnFail;
   private boolean bailOnPluginFail;
   private String policyBundleId;
+  private double warnActionHealthFactor;
+  private double stopActionHealthFactor;
   private List<Annotation> annotations;
   private boolean autoSubscribeTagUpdates;
   private boolean forceAnalyze;
@@ -27,13 +29,16 @@ public class BuildConfig {
   private boolean engineverify;
 
   public BuildConfig(String name,  String engineRetries, boolean bailOnFail, boolean bailOnPluginFail,
-      String policyBundleId, List<Annotation> annotations, boolean autoSubscribeTagUpdates, boolean forceAnalyze, boolean debug,
+      String policyBundleId, double warnActionHealthFactor, double stopActionHealthFactor, List<Annotation> annotations,
+      boolean autoSubscribeTagUpdates, boolean forceAnalyze, boolean debug,
       String engineurl, String engineuser, String enginepass, boolean engineverify) {
     this.name = name;
     this.engineRetries = engineRetries;
     this.bailOnFail = bailOnFail;
     this.bailOnPluginFail = bailOnPluginFail;
     this.policyBundleId = policyBundleId;
+    this.warnActionHealthFactor = warnActionHealthFactor;
+    this.stopActionHealthFactor = stopActionHealthFactor;
     this.annotations = annotations;
     this.autoSubscribeTagUpdates = autoSubscribeTagUpdates;
     this.forceAnalyze = forceAnalyze;
@@ -64,6 +69,14 @@ public class BuildConfig {
     return policyBundleId;
   }
 
+  public double getStopActionHealthFactor(){
+    return stopActionHealthFactor;
+  }
+  
+  public double getWarnActionHealthFactor(){
+    return warnActionHealthFactor;
+  }
+  
   public List<Annotation> getAnnotations() {
     return annotations;
   }
@@ -113,6 +126,8 @@ public class BuildConfig {
       for (Annotation a : annotations) {
         consoleLog.logInfo("[build] annotation: " + a.getKey() + "=" + a.getValue());
       }
+      consoleLog.logInfo("[build] warnActionHealthFactor: " + warnActionHealthFactor);
+      consoleLog.logInfo("[build] stopActionHealthFactor: " + stopActionHealthFactor);
     }
     consoleLog.logInfo("[build] bailOnFail: " + bailOnFail);
     consoleLog.logInfo("[build] bailOnPluginFail: " + bailOnPluginFail);
