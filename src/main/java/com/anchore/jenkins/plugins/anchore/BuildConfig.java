@@ -17,6 +17,10 @@ public class BuildConfig {
   private String policyBundleId;
   private double warnActionHealthFactor;
   private double stopActionHealthFactor;
+  private Integer unstableStopThreshold;
+  private Integer unstableWarnThreshold;
+  private Integer failedStopThreshold;
+  private Integer failedWarnThreshold;
   private List<Annotation> annotations;
   private boolean autoSubscribeTagUpdates;
   private boolean forceAnalyze;
@@ -29,7 +33,9 @@ public class BuildConfig {
   private boolean engineverify;
 
   public BuildConfig(String name,  String engineRetries, boolean bailOnFail, boolean bailOnPluginFail,
-      String policyBundleId, double warnActionHealthFactor, double stopActionHealthFactor, List<Annotation> annotations,
+      String policyBundleId, double warnActionHealthFactor, double stopActionHealthFactor,
+      Integer unstableStopThreshold, Integer unstableWarnThreshold, Integer failedStopThreshold,
+      Integer failedWarnThreshold, List<Annotation> annotations,
       boolean autoSubscribeTagUpdates, boolean forceAnalyze, boolean debug,
       String engineurl, String engineuser, String enginepass, boolean engineverify) {
     this.name = name;
@@ -39,6 +45,10 @@ public class BuildConfig {
     this.policyBundleId = policyBundleId;
     this.warnActionHealthFactor = warnActionHealthFactor;
     this.stopActionHealthFactor = stopActionHealthFactor;
+    this.unstableStopThreshold = unstableStopThreshold;
+    this.unstableWarnThreshold = unstableWarnThreshold;
+    this.failedStopThreshold = failedStopThreshold;
+    this.failedWarnThreshold = failedWarnThreshold;
     this.annotations = annotations;
     this.autoSubscribeTagUpdates = autoSubscribeTagUpdates;
     this.forceAnalyze = forceAnalyze;
@@ -76,7 +86,23 @@ public class BuildConfig {
   public double getWarnActionHealthFactor(){
     return warnActionHealthFactor;
   }
-  
+
+  public Integer getUnstableStopThreshold(){
+    return unstableStopThreshold;
+  }
+
+  public Integer getUnstableWarnThreshold(){
+    return unstableWarnThreshold;
+  }
+
+  public Integer getFailedStopThreshold(){
+    return failedStopThreshold;
+  }
+
+  public Integer getFailedWarnThreshold(){
+    return failedWarnThreshold;
+  }
+
   public List<Annotation> getAnnotations() {
     return annotations;
   }

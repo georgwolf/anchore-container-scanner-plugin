@@ -64,6 +64,11 @@ public class AnchoreBuilder extends Builder implements SimpleBuildStep {
   private String policyBundleId = DescriptorImpl.DEFAULT_POLICY_BUNDLE_ID;
   private double stopActionHealthFactor = DescriptorImpl.DEFAULT_STOP_ACTION_HEALTH_FACTOR;
   private double warnActionHealthFactor = DescriptorImpl.DEFAULT_WARN_ACTION_HEALTH_FACTOR;
+  private Integer unstableStopThreshold = DescriptorImpl.DEFAULT_UNSTABLE_STOP_THRESHOLD;
+  private Integer unstableWarnThreshold = DescriptorImpl.DEFAULT_UNSTABLE_WARN_THRESHOLD;
+  private Integer failedStopThreshold = DescriptorImpl.DEFAULT_FAILED_STOP_THRESHOLD;
+  private Integer failedWarnThreshold = DescriptorImpl.DEFAULT_FAILED_WARN_THRESHOLD;
+  
   private List<Annotation> annotations;
   private boolean autoSubscribeTagUpdates = DescriptorImpl.DEFAULT_AUTOSUBSCRIBE_TAG_UPDATES;
   private boolean forceAnalyze = DescriptorImpl.DEFAULT_FORCE_ANALYZE;
@@ -102,6 +107,22 @@ public class AnchoreBuilder extends Builder implements SimpleBuildStep {
   
   public double getStopActionHealthFactor(){
     return stopActionHealthFactor;
+  }
+
+  public Integer getUnstableStopThreshold(){
+    return unstableStopThreshold;
+  }
+
+  public Integer getUnstableWarnThreshold(){
+    return unstableWarnThreshold;
+  }
+
+  public Integer getFailedStopThreshold(){
+    return failedStopThreshold;
+  }
+
+  public Integer getFailedWarnThreshold(){
+    return failedWarnThreshold;
   }
 
   public List<Annotation> getAnnotations() {
@@ -158,7 +179,27 @@ public class AnchoreBuilder extends Builder implements SimpleBuildStep {
   public void setStopActionHealthFactor(double stopActionHealthFactor){
     this.stopActionHealthFactor = stopActionHealthFactor;
   }
-  
+
+  @DataBoundSetter
+  public void setUnstableStopThreshold(Integer unstableStopThreshold){
+    this.unstableStopThreshold = unstableStopThreshold;
+  }
+
+  @DataBoundSetter
+  public void setUnstableWarnThreshold(Integer unstableWarnThreshold){
+    this.unstableWarnThreshold = unstableWarnThreshold;
+  }
+
+  @DataBoundSetter
+  public void setFailedStopThreshold(Integer failedStopThreshold){
+    this.failedStopThreshold = failedStopThreshold;
+  }
+
+  @DataBoundSetter
+  public void setFailedWarnThreshold(Integer failedWarnThreshold){
+    this.failedWarnThreshold = failedWarnThreshold;
+  }
+
   @DataBoundSetter
   public void setAnnotations(List<Annotation> annotations) {
     this.annotations = annotations;
@@ -203,13 +244,10 @@ public class AnchoreBuilder extends Builder implements SimpleBuildStep {
     LOG.warning(
         "Starting Anchore Container Image Scanner step, project: " + run.getParent().getDisplayName() + ", job: " + run.getNumber());
 
-    boolean failedByGate = false;
     BuildConfig config = null;
     BuildWorker worker = null;
     DescriptorImpl globalConfig = getDescriptor();
     ConsoleLog console = new ConsoleLog("AnchorePlugin", listener.getLogger(), globalConfig.getDebug());
-
-    GATE_ACTION finalAction;
 
     try {
 
@@ -239,7 +277,8 @@ public class AnchoreBuilder extends Builder implements SimpleBuildStep {
 
       /* Instantiate config and a new build worker */
       config = new BuildConfig(name, engineRetries, bailOnFail,
-          bailOnPluginFail, policyBundleId, warnActionHealthFactor, stopActionHealthFactor, annotations,
+          bailOnPluginFail, policyBundleId, warnActionHealthFactor, stopActionHealthFactor, unstableStopThreshold,
+          unstableWarnThreshold, failedStopThreshold, failedWarnThreshold, annotations,
           autoSubscribeTagUpdates, forceAnalyze, globalConfig.getDebug(),
           // messy build time overrides, ugh!
           !Strings.isNullOrEmpty(engineurl) ? engineurl : globalConfig.getEngineurl(),
@@ -263,7 +302,7 @@ public class AnchoreBuilder extends Builder implements SimpleBuildStep {
       worker.runAnalyzer();
 
       /* Run gates */
-      finalAction = worker.runGates();
+      worker.runGates();
 
       /* Run queries and continue even if it fails */
       try {
@@ -275,23 +314,11 @@ public class AnchoreBuilder extends Builder implements SimpleBuildStep {
       /* Setup reports */
       worker.setupBuildReports();
 
-      /* Evaluate result of step based on gate action */
-      if (null != finalAction) {
-        if (config.getBailOnFail() && (GATE_ACTION.STOP.equals(finalAction) || GATE_ACTION.FAIL.equals(finalAction))) {
-          console.logWarn("Failing Anchore Container Image Scanner Plugin step due to final result " + finalAction);
-          failedByGate = true;
-          throw new AbortException("Failing Anchore Container Image Scanner Plugin step due to final result " + finalAction);
-        } else {
-          console.logInfo("Marking Anchore Container Image Scanner step as successful, final result " + finalAction);
-        }
-      } else {
-        console.logInfo("Marking Anchore Container Image Scanner step as successful, no final result");
-      }
+      /* Determine build result based on Anchore gates and status thresholds */
+      run.setResult(worker.evalGates());
 
     } catch (Exception e) {
-      if (failedByGate) {
-        throw e;
-      } else if ((null != config && config.getBailOnPluginFail()) || bailOnPluginFail) {
+      if ((null != config && config.getBailOnPluginFail()) || bailOnPluginFail) {
         console.logError("Failing Anchore Container Image Scanner Plugin step due to errors in plugin execution", e);
         if (e instanceof AbortException) {
           throw e;
@@ -328,12 +355,16 @@ public class AnchoreBuilder extends Builder implements SimpleBuildStep {
     // Default job level config that may be used both by config.jelly and an instance of AnchoreBuilder
     public static final String DEFAULT_NAME = "anchore_images";
     public static final String DEFAULT_ENGINE_RETRIES = "300";
-    public static final boolean DEFAULT_BAIL_ON_FAIL = true;
+    public static final boolean DEFAULT_BAIL_ON_FAIL = false;
     public static final boolean DEFAULT_BAIL_ON_PLUGIN_FAIL = true;
     public static final String DEFAULT_PLUGIN_MODE = "anchoreengine";
     public static final String DEFAULT_POLICY_BUNDLE_ID = "";
     public static final double DEFAULT_STOP_ACTION_HEALTH_FACTOR = 25;
     public static final double DEFAULT_WARN_ACTION_HEALTH_FACTOR = 5;
+    public static final Integer DEFAULT_UNSTABLE_STOP_THRESHOLD = null;
+    public static final Integer DEFAULT_UNSTABLE_WARN_THRESHOLD = 1;
+    public static final Integer DEFAULT_FAILED_STOP_THRESHOLD = 1;
+    public static final Integer DEFAULT_FAILED_WARN_THRESHOLD = null;
     public static final String EMPTY_STRING = "";
     public static final boolean DEFAULT_AUTOSUBSCRIBE_TAG_UPDATES = true;
     public static final boolean DEFAULT_FORCE_ANALYZE = false;
